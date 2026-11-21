@@ -9,7 +9,7 @@ def token():
     req=urllib.request.Request(uri,headers={'Authorization':'Bearer '+os.environ['ACTIONS_ID_TOKEN_REQUEST_TOKEN']})
     with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)['value']
 def call(path,method='GET',data=None,headers=None):
-    req=urllib.request.Request(BASE+path,method=method,data=data,headers={'Authorization':'Bearer '+token(),**(headers or {})})
+    req=urllib.request.Request(BASE+path,method=method,data=data,headers={'Authorization':'Bearer '+token(),'User-Agent':'Mozilla/5.0 (compatible; PersonalAppsRelease/1.0)','Accept':'application/json',**(headers or {})})
     with urllib.request.urlopen(req,timeout=180) as r:return json.load(r)
 if sys.argv[1]=='prepare':
     from cryptography.hazmat.primitives import serialization,hashes

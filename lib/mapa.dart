@@ -245,9 +245,10 @@ class _MapaRepartoState extends State<MapaReparto> {
     }
     if (!mounted) return;
     if (destino == null && cliente.direccion.isNotEmpty) {
+      final consulta = generacion;
       try {
         final ds = await servicio.buscar(cliente.direccion, origen);
-        if (!mounted) return;
+        if (!mounted || consulta != generacion) return;
         if (ds.isNotEmpty) {
           setState(() {
             destino = ds.first.punto;
@@ -327,12 +328,13 @@ class _MapaRepartoState extends State<MapaReparto> {
 
   Future<void> confirmarDestino() async {
     if (destino == null) return;
+    final seleccion = generacion;
     await widget.negocio.fijarUbicacion(
       cliente.id,
       destino!.latitude,
       destino!.longitude,
     );
-    if (!mounted) return;
+    if (!mounted || seleccion != generacion) return;
     setState(() => confirmado = true);
     await trazar();
   }

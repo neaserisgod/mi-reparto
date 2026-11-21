@@ -86,6 +86,9 @@ class Actualizador {
             Uri.parse(
               '$servidorActualizaciones/api/update/latest.json',
             ).replace(queryParameters: {'app': app, 'version': actual}),
+            headers: const {
+              'User-Agent': 'Mozilla/5.0 (Android; AppsPersonales/1.0)',
+            },
           )
           .timeout(const Duration(seconds: 12));
       if (res.statusCode != 200) {
@@ -115,7 +118,11 @@ class Actualizador {
       }
       if (!valido) {
         final response = await client
-            .send(http.Request('GET', v.url))
+            .send(
+              http.Request('GET', v.url)
+                ..headers['User-Agent'] =
+                    'Mozilla/5.0 (Android; AppsPersonales/1.0)',
+            )
             .timeout(const Duration(seconds: 20));
         if (response.statusCode != 200) {
           throw const FormatException('No se pudo descargar la actualización.');

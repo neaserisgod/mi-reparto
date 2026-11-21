@@ -12,3 +12,6 @@ android/key.properties
 private/
 capturas/
 .DS_Store
+
+__pycache__/
+*.pyc
