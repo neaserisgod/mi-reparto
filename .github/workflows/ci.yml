@@ -1,0 +1,56 @@
+name: Verificar y compilar Android
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: reparto-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verificar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.47.5'
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib test
+      - run: flutter analyze
+      - run: flutter test
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+      - uses: android-actions/setup-android@v3
+        with:
+          packages: platform-tools
+          log-accepted-android-sdk-licenses: false
+      - name: Conservar la firma entre compilaciones de prueba
+        env:
+          REPARTO_KEYSTORE: ${{ secrets.ANDROID_DEBUG_KEYSTORE }}
+        run: |
+          python3 - <<'PY'
+          import base64, os
+          from pathlib import Path
+          clave = os.environ['REPARTO_KEYSTORE']
+          if clave:
+              destino = Path.home() / '.android' / 'debug.keystore'
+              destino.parent.mkdir(parents=True, exist_ok=True)
+              destino.write_bytes(base64.b64decode(clave))
+              destino.chmod(0o600)
+          else:
+              print('APK de prueba con firma temporal. Configurá ANDROID_DEBUG_KEYSTORE para conservar actualizaciones instalables.')
+          PY
+      - run: flutter build apk --debug
+      - uses: actions/upload-artifact@v4
+        with:
+          name: mi-reparto-apk-prueba
+          path: build/app/outputs/flutter-apk/app-debug.apk
+          if-no-files-found: error
