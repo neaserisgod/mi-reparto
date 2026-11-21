@@ -1,3 +1,4 @@
+import 'actualizaciones.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -12,7 +13,7 @@ Future<void> main() async {
     final dir = await getApplicationDocumentsDirectory();
     final negocio = Negocio(archivo: File('${dir.path}/mi-reparto.json'));
     await negocio.cargar();
-    runApp(RepartoApp(negocio: negocio));
+    runApp(RepartoApp(negocio: negocio, actualizaciones: true));
   } catch (_) {
     runApp(
       MaterialApp(
@@ -32,8 +33,13 @@ Future<void> main() async {
 }
 
 class RepartoApp extends StatelessWidget {
-  const RepartoApp({super.key, required this.negocio});
+  const RepartoApp({
+    super.key,
+    required this.negocio,
+    this.actualizaciones = false,
+  });
   final Negocio negocio;
+  final bool actualizaciones;
   @override
   Widget build(BuildContext context) => MaterialApp(
     title: 'Mi Reparto',
@@ -42,6 +48,11 @@ class RepartoApp extends StatelessWidget {
     locale: const Locale('es', 'AR'),
     supportedLocales: const [Locale('es', 'AR')],
     localizationsDelegates: GlobalMaterialLocalizations.delegates,
-    home: Inicio(negocio: negocio),
+    home: actualizaciones
+        ? ActualizacionesAutomaticas(
+            app: 'mi-reparto',
+            child: Inicio(negocio: negocio),
+          )
+        : Inicio(negocio: negocio),
   );
 }

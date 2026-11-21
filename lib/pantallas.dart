@@ -1,3 +1,4 @@
+import 'actualizaciones.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
@@ -7,6 +8,7 @@ import 'package:share_plus/share_plus.dart';
 import 'dinero.dart';
 import 'diseno.dart';
 import 'negocio.dart';
+import 'mapa.dart';
 
 const dias = [
   'Lunes',
@@ -558,6 +560,12 @@ class _EditorClienteState extends State<EditorCliente> {
           dia: dia,
           pedido: cantidad,
           activo: activo,
+          latitud: direccion.text.trim() == widget.cliente?.direccion
+              ? widget.cliente?.latitud
+              : null,
+          longitud: direccion.text.trim() == widget.cliente?.direccion
+              ? widget.cliente?.longitud
+              : null,
         ),
       );
       if (context.mounted) Navigator.pop(context);
@@ -624,6 +632,24 @@ class Detalle extends StatelessWidget {
                   ],
                 ),
               ),
+              FilledButton.icon(
+                onPressed: () => abrir(
+                  context,
+                  MapaReparto(negocio: negocio, clienteId: c.id),
+                ),
+                icon: const Icon(Icons.navigation_outlined),
+                label: const Text('Ir al cliente'),
+              ),
+              const SizedBox(height: 10),
+              FilledButton.icon(
+                onPressed: () => abrir(
+                  context,
+                  MapaReparto(negocio: negocio, clienteId: c.id),
+                ),
+                icon: const Icon(Icons.near_me_outlined),
+                label: const Text('Ir al cliente'),
+              ),
+              const SizedBox(height: 10),
               if (c.activo) ...[
                 FilledButton.icon(
                   onPressed: () =>
@@ -1045,6 +1071,8 @@ class _PedidoState extends State<Pedido> {
           dia: dia,
           pedido: cantidad,
           activo: c.activo,
+          latitud: c.latitud,
+          longitud: c.longitud,
         ),
       );
       if (context.mounted) Navigator.pop(context);
@@ -1314,9 +1342,16 @@ class _AjustesState extends State<Ajustes> {
                   ),
                 ),
               ),
+          titulo('Actualizaciones'),
+          Accion(
+            'Buscar actualizaciones',
+            () => Actualizador.revisar(context, 'mi-reparto', manual: true),
+            icono: Icons.system_update_alt_rounded,
+          ),
           titulo('Mi Reparto'),
+          const VersionInstalada(),
           const Text(
-            'Versión 0.1.0 · Bidones de 20 litros\nGestión interna. No emite comprobantes fiscales.',
+            'Bidones de 20 litros\nGestión interna. No emite comprobantes fiscales.',
             style: TextStyle(color: tenue),
           ),
         ],

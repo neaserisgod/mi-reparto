@@ -12,7 +12,10 @@ class Cliente {
     this.dia = 6,
     this.pedido = 0,
     this.activo = true,
+    this.latitud,
+    this.longitud,
   });
+  final double? latitud, longitud;
   final String id, nombre, direccion, telefono;
   final int precio, dia, pedido;
   final bool activo;
@@ -25,6 +28,8 @@ class Cliente {
     'dia': dia,
     'pedido': pedido,
     'activo': activo,
+    'latitud': latitud,
+    'longitud': longitud,
   };
   factory Cliente.fromJson(Map<String, dynamic> j) {
     final c = Cliente(
@@ -36,7 +41,17 @@ class Cliente {
       dia: j['dia'] as int,
       pedido: j['pedido'] as int,
       activo: j['activo'] as bool,
+      latitud: (j['latitud'] as num?)?.toDouble(),
+      longitud: (j['longitud'] as num?)?.toDouble(),
     );
+    if ((c.latitud == null) != (c.longitud == null) ||
+        (c.latitud != null &&
+            (!c.latitud!.isFinite ||
+                c.latitud!.abs() > 90 ||
+                !c.longitud!.isFinite ||
+                c.longitud!.abs() > 180))) {
+      throw const FormatException('Ubicación inválida.');
+    }
     if (c.id.isEmpty ||
         c.nombre.trim().isEmpty ||
         c.precio <= 0 ||
@@ -57,6 +72,8 @@ class Cliente {
     dia: dia,
     pedido: n,
     activo: activo,
+    latitud: latitud,
+    longitud: longitud,
   );
 }
 
@@ -325,6 +342,24 @@ class Negocio extends ChangeNotifier {
       _clientes[i] = c;
     }
   });
+  Future<void> fijarUbicacion(String id, double lat, double lon) async {
+    final c = _clientes.firstWhere((c) => c.id == id);
+    await guardarCliente(
+      Cliente(
+        id: c.id,
+        nombre: c.nombre,
+        direccion: c.direccion,
+        telefono: c.telefono,
+        precio: c.precio,
+        dia: c.dia,
+        pedido: c.pedido,
+        activo: c.activo,
+        latitud: lat,
+        longitud: lon,
+      ),
+    );
+  }
+
   Future<void> renombrar(String texto) => _cambiar(
     () => nombre = texto.trim().isEmpty ? 'Mi Reparto' : texto.trim(),
   );

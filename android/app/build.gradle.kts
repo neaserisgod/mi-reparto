@@ -10,6 +10,7 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
+    buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("debug") } }
     defaultConfig {
         applicationId = "com.neaserisgod.mireparto"
         minSdk = flutter.minSdkVersion
@@ -19,3 +20,5 @@ android {
     }
 }
 flutter { source = "../.." }
+
+dependencies { implementation("androidx.core:core:1.15.0") }

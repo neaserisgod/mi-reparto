@@ -1,7 +1,7 @@
 name: mi_reparto
 description: Clientes, envases y cuenta corriente para el reparto de agua.
 publish_to: none
-version: 0.1.0+1
+version: 0.2.0+2
 environment:
   sdk: ^3.12.2
 dependencies:
@@ -13,6 +13,12 @@ dependencies:
   path: ^1.9.1
   share_plus: ^13.3.1
   file_picker: ^13.4.0
+  flutter_map: ^8.3.2
+  latlong2: ^0.10.1
+  geolocator: ^14.0.1
+  http: ^1.6.0
+  url_launcher: ^6.3.3
+  crypto: ^3.0.8
 dev_dependencies:
   flutter_test:
     sdk: flutter
