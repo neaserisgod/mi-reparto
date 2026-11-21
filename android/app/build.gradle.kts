@@ -2,6 +2,7 @@ plugins {
     id("com.android.application")
     id("dev.flutter.flutter-gradle-plugin")
 }
+val appSigningPath = System.getenv("APP_SIGNING_KEYSTORE")
 android {
     namespace = "com.neaserisgod.mireparto"
     compileSdk = flutter.compileSdkVersion
@@ -10,7 +11,16 @@ android {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
     }
-    buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("debug") } }
+    signingConfigs {
+        create("personal") {
+            storeFile = appSigningPath?.let { file(it) }
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+            storeType = "PKCS12"
+        }
+    }
+    buildTypes { getByName("release") { signingConfig = signingConfigs.getByName("personal") } }
     defaultConfig {
         applicationId = "com.neaserisgod.mireparto"
         minSdk = flutter.minSdkVersion
