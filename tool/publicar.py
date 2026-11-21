@@ -32,11 +32,20 @@ if sys.argv[1]=='prepare':
         out.write('APP_SIGNING_KEYSTORE='+str(target)+'\n')
         out.write('APP_EXPECTED_CERT_SHA256='+fingerprint+'\n')
     print('Firma estable preparada. Certificado SHA256: '+fingerprint)
+elif sys.argv[1]=='sign':
+    file=Path('build/app/outputs/flutter-apk/app-release.apk')
+    tools=sorted((Path(os.environ['ANDROID_HOME'])/'build-tools').glob('*/apksigner'),key=lambda p:tuple(int(x) for x in re.findall(r'\d+',p.parent.name)))
+    if not tools:raise SystemExit('No se encontró apksigner. No se firmó el APK.')
+    signed=file.with_name('app-release-signed.apk')
+    subprocess.run([str(tools[-1]),'sign','--ks',os.environ['APP_SIGNING_KEYSTORE'],'--ks-type','PKCS12','--ks-key-alias','androiddebugkey','--ks-pass','env:APP_KEYSTORE_PASSWORD','--key-pass','env:APP_KEYSTORE_PASSWORD','--v4-signing-enabled','false','--out',str(signed),str(file)],env={**os.environ,'APP_KEYSTORE_PASSWORD':'android'},check=True)
+    signed.replace(file)
+    print('APK firmado explícitamente con la clave estable.')
 elif sys.argv[1] in ('publish','verify'):
     file=Path(sys.argv[2]) if sys.argv[1]=='verify' else Path('build/app/outputs/flutter-apk/app-release.apk')
     tools=sorted((Path(os.environ['ANDROID_HOME'])/'build-tools').glob('*/apksigner'),key=lambda p:tuple(int(x) for x in re.findall(r'\d+',p.parent.name)))
     if not tools:raise SystemExit('No se encontró apksigner. No se publicó el APK.')
     signed=subprocess.run([str(tools[-1]),'verify','--print-certs',str(file)],check=True,capture_output=True,text=True).stdout
+    print('\n'.join(line for line in signed.splitlines() if 'certificate DN:' in line or 'certificate SHA-256 digest:' in line))
     expected=os.environ['APP_EXPECTED_CERT_SHA256']
     match=re.search(r'Signer #1 certificate SHA-256 digest: ([a-f0-9]{64})',signed)
     if not match or match.group(1)!=expected:raise SystemExit('La firma del APK no coincide con la clave estable. No se publicó el APK.')

@@ -60,6 +60,8 @@ jobs:
           PYTHON
       - name: Compilar APK firmado
         run: flutter build apk --release --target-platform android-arm64 --build-name "$VERSION_NAME" --build-number "$VERSION_BUILD"
+      - name: Firmar el APK final explícitamente
+        run: python tool/publicar.py sign
       - name: Publicar APK verificado y versión
         run: python tool/publicar.py publish
       - uses: actions/upload-artifact@v4
