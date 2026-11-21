@@ -2,6 +2,7 @@
 import base64, hashlib, json, os, sys, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 import subprocess,re
+from firma import certificado_correcto
 from datetime import datetime, timezone
 BASE='https://apps-personales-actualizaciones.gtalovergamer.workers.dev'
 APP=os.environ['APP_ID']
@@ -47,8 +48,7 @@ elif sys.argv[1] in ('publish','verify'):
     signed=subprocess.run([str(tools[-1]),'verify','--print-certs',str(file)],check=True,capture_output=True,text=True).stdout
     print('\n'.join(line for line in signed.splitlines() if 'certificate DN:' in line or 'certificate SHA-256 digest:' in line))
     expected=os.environ['APP_EXPECTED_CERT_SHA256']
-    match=re.search(r'Signer #1 certificate SHA-256 digest: ([a-f0-9]{64})',signed)
-    if not match or match.group(1)!=expected:raise SystemExit('La firma del APK no coincide con la clave estable. No se publicó el APK.')
+    if not certificado_correcto(signed,expected):raise SystemExit('La firma del APK no coincide con la clave estable. No se publicó el APK.')
     aapt=tools[-1].parent/'aapt'
     manifest=subprocess.run([str(aapt),'dump','badging',str(file)],check=True,capture_output=True,text=True).stdout
     package='com.neaserisgod.'+('milavadero' if APP=='mi-lavadero' else 'mireparto')

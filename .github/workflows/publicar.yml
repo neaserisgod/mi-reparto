@@ -24,6 +24,7 @@ jobs:
       RELEASE_NOTES: ${{ inputs.notas || 'Mejoras y correcciones' }}
     steps:
       - uses: actions/checkout@v4
+      - run: python -m unittest discover -s tool -p 'test_*.py'
       - run: python -m pip install cryptography==46.0.3
       - name: Preparar firma estable mediante identidad de GitHub
         run: python tool/publicar.py prepare
