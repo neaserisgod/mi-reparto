@@ -1,5 +1,5 @@
 """Publicación autenticada por GitHub OIDC. Nunca imprime claves ni tokens."""
-import base64, hashlib, json, os, sys, urllib.parse, urllib.request
+import base64, hashlib, json, os, sys, urllib.parse, urllib.request, urllib.error
 from pathlib import Path
 from datetime import datetime, timezone
 BASE='https://apps-personales-actualizaciones.gtalovergamer.workers.dev'
@@ -10,7 +10,11 @@ def token():
     with urllib.request.urlopen(req,timeout=30) as r:return json.load(r)['value']
 def call(path,method='GET',data=None,headers=None):
     req=urllib.request.Request(BASE+path,method=method,data=data,headers={'Authorization':'Bearer '+token(),'User-Agent':'Mozilla/5.0 (compatible; PersonalAppsRelease/1.0)','Accept':'application/json',**(headers or {})})
-    with urllib.request.urlopen(req,timeout=180) as r:return json.load(r)
+    try:
+        with urllib.request.urlopen(req,timeout=180) as r:return json.load(r)
+    except urllib.error.HTTPError as error:
+        print('Publicación: HTTP '+str(error.code)+' '+error.read(300).decode(errors='replace'))
+        raise
 if sys.argv[1]=='prepare':
     from cryptography.hazmat.primitives import serialization,hashes
     from cryptography.hazmat.primitives.serialization import pkcs12
