@@ -27,6 +27,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/mapa_estilo.json
+    - assets/LICENCIAS_MAPA.txt
   fonts:
     - family: Figtree
       fonts:
