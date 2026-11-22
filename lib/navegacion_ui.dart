@@ -215,8 +215,10 @@ class FichaDestinoNavegacion extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (eta.isNotEmpty)
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
+            Wrap(
+              spacing: 14,
+              runSpacing: 4,
+              crossAxisAlignment: WrapCrossAlignment.center,
               children: [
                 Text(
                   eta,
@@ -226,18 +228,12 @@ class FichaDestinoNavegacion extends StatelessWidget {
                     color: llegado ? acento : tinta,
                   ),
                 ),
-                const SizedBox(width: 14),
-                Expanded(
-                  child: Padding(
-                    padding: const EdgeInsets.only(bottom: 4),
-                    child: Text(
-                      distancia,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: tenue,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
+                Text(
+                  distancia,
+                  style: const TextStyle(
+                    fontSize: 17,
+                    color: tenue,
+                    fontWeight: FontWeight.w600,
                   ),
                 ),
               ],
@@ -261,29 +257,49 @@ class FichaDestinoNavegacion extends StatelessWidget {
               ),
             ),
           const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: Accion(
-                  textoAccion,
-                  accionPrincipal,
-                  icono: confirmando
-                      ? Icons.location_on_outlined
-                      : Icons.local_shipping_outlined,
-                ),
-              ),
-              if (cobrar != null) ...[
-                const SizedBox(width: 10),
-                OutlinedButton(
-                  onPressed: cobrar,
-                  style: OutlinedButton.styleFrom(
-                    minimumSize: const Size(54, 54),
-                    padding: const EdgeInsets.all(14),
-                  ),
-                  child: const Icon(Icons.payments_outlined),
-                ),
-              ],
-            ],
+          LayoutBuilder(
+            builder: (context, limites) {
+              final principal = Accion(
+                textoAccion,
+                accionPrincipal,
+                icono: confirmando
+                    ? Icons.location_on_outlined
+                    : Icons.local_shipping_outlined,
+              );
+              final pago = cobrar == null
+                  ? null
+                  : OutlinedButton.icon(
+                      onPressed: cobrar,
+                      icon: const Icon(Icons.payments_outlined),
+                      label: const Text('Cobrar'),
+                    );
+              if (limites.maxWidth < 300 ||
+                  MediaQuery.textScalerOf(context).scale(16) > 20) {
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    principal,
+                    if (pago != null) ...[const SizedBox(height: 8), pago],
+                  ],
+                );
+              }
+              return Row(
+                children: [
+                  Expanded(child: principal),
+                  if (cobrar != null) ...[
+                    const SizedBox(width: 10),
+                    IconButton.outlined(
+                      tooltip: 'Registrar un cobro',
+                      onPressed: cobrar,
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(54, 54),
+                      ),
+                      icon: const Icon(Icons.payments_outlined),
+                    ),
+                  ],
+                ],
+              );
+            },
           ),
         ],
       ),

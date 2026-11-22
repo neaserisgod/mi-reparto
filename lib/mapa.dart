@@ -45,7 +45,7 @@ class ServicioMapa {
           Uri.https('nominatim.openstreetmap.org', '/search', q),
           headers: {
             'User-Agent':
-                'MiReparto/0.2 (https://github.com/neaserisgod/mi-reparto)',
+                'MiReparto/0.3 (https://github.com/neaserisgod/mi-reparto)',
             'Accept-Language': 'es',
           },
         )
@@ -76,7 +76,7 @@ class ServicioMapa {
             '/routed-car/route/v1/driving/${origen.longitude},${origen.latitude};${destino.longitude},${destino.latitude}',
             {'overview': 'full', 'geometries': 'geojson', 'steps': 'true'},
           ),
-          headers: {'User-Agent': 'MiReparto/0.2'},
+          headers: {'User-Agent': 'MiReparto/0.3'},
         )
         .timeout(const Duration(seconds: 20));
     if (r.statusCode != 200) {
@@ -229,12 +229,16 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
+      enPrimerPlano = false;
       ubicacion?.cancel();
       ubicacion = null;
-    } else if (state == AppLifecycleState.resumed && ubicacion == null) {
-      unawaited(activarGps());
+    } else if (state == AppLifecycleState.resumed) {
+      enPrimerPlano = true;
+      if (ubicacion == null) unawaited(activarGps());
     }
   }
+
+  bool enPrimerPlano = true;
 
   LocationSettings get ajustesGps => AndroidSettings(
     accuracy: LocationAccuracy.bestForNavigation,
@@ -244,7 +248,7 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
     forceLocationManager: true,
   );
   Future<void> activarGps() async {
-    if (obteniendoGps || !mounted) return;
+    if (obteniendoGps || !mounted || !enPrimerPlano) return;
     obteniendoGps = true;
     try {
       if (!await Geolocator.isLocationServiceEnabled()) {
@@ -262,7 +266,9 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
           'Permití la ubicación precisa para seguir el recorrido en vivo.',
         );
       }
+      if (!mounted || !enPrimerPlano) return;
       await ubicacion?.cancel();
+      if (!mounted || !enPrimerPlano) return;
       ubicacion = Geolocator.getPositionStream(locationSettings: ajustesGps).listen(
         recibirPosicion,
         onError: (_) {
