@@ -22,6 +22,7 @@ jobs:
         with:
           packages: platform-tools
           log-accepted-android-sdk-licenses: false
+      - run: python -m pip install Pillow==12.0.0
       - run: flutter pub get
       - name: Compilar solo el escenario de prueba
         run: flutter build apk --debug --target-platform android-x64 --target lib/prueba_navegacion.dart

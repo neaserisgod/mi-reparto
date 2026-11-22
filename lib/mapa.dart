@@ -514,7 +514,12 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
     if (listo && mapa != null) {
       try {
         await mapa!.setGeoJsonSource('destino', _punto(destino));
-      } catch (_) {}
+      } catch (e) {
+        assert(() {
+          debugPrint('MapLibre: $e');
+          return true;
+        }());
+      }
     }
   }
 
@@ -526,7 +531,12 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
         'ruta-pendiente',
         _linea(seguimiento?.pendientes(progreso) ?? ruta?.puntos ?? []),
       );
-    } catch (_) {}
+    } catch (e) {
+      assert(() {
+        debugPrint('MapLibre: $e');
+        return true;
+      }());
+    }
   }
 
   Future<void> pintarPosicion() async {
@@ -542,7 +552,12 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
           timestamp: p.timestamp,
         ),
       );
-    } catch (_) {}
+    } catch (e) {
+      assert(() {
+        debugPrint('MapLibre: $e');
+        return true;
+      }());
+    }
   }
 
   Future<void> centrar() async {
@@ -565,7 +580,12 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
           duration: const Duration(milliseconds: 850),
         );
       }
-    } catch (_) {}
+    } catch (e) {
+      assert(() {
+        debugPrint('MapLibre: $e');
+        return true;
+      }());
+    }
   }
 
   Future<void> verRecorrido() async {
@@ -611,7 +631,12 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
         ),
         duration: duracion,
       );
-    } catch (_) {}
+    } catch (e) {
+      assert(() {
+        debugPrint('MapLibre: $e');
+        return true;
+      }());
+    }
   }
 
   Future<void> trazar({bool forzar = false}) async {
@@ -805,6 +830,9 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
                 Positioned.fill(
                   child: ml.MapLibreMap(
                     styleString: 'assets/mapa_estilo.json',
+                    androidView: const ml.AndroidMapView(
+                      composition: ml.AndroidComposition.hybridComposition,
+                    ),
                     initialCameraPosition: ml.CameraPosition(
                       target: punto(
                         destino ?? origen ?? const LatLng(-34.6, -58.4),

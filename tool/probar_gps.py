@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import time
 import urllib.request
+from PIL import Image, ImageChops, ImageStat
 
 out = Path('evidencia-gps')
 out.mkdir(exist_ok=True)
@@ -43,6 +44,14 @@ try:
         adb('emu', 'geo', 'fix', str(point[0]), str(point[1]))
         time.sleep(1.2)
     middle = capture('02-avance')
+    # Comparar el mapa mismo, sin tarjetas, barra de estado ni reloj.
+    a = Image.open(out / '01-inicio.png').convert('RGB')
+    b = Image.open(out / '02-avance.png').convert('RGB')
+    region = (0, int(a.height * .4), int(a.width * .8), int(a.height * .63))
+    delta = ImageChops.difference(a.crop(region), b.crop(region))
+    cambio = sum(ImageStat.Stat(delta).mean)
+    (out / 'render.json').write_text(json.dumps({'cambio_mapa': cambio}))
+    assert cambio > 2, 'El mapa quedó congelado aunque avanzaron las indicaciones'
     for _ in range(5):
         adb('emu', 'geo', 'fix', str(points[-1][0]), str(points[-1][1]))
         time.sleep(2)
