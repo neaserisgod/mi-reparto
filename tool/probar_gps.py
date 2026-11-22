@@ -4,6 +4,7 @@ from pathlib import Path
 import subprocess
 import time
 import urllib.request
+import xml.etree.ElementTree as ET
 from PIL import Image, ImageChops, ImageStat
 
 out = Path('evidencia-gps')
@@ -37,6 +38,9 @@ try:
         adb('emu', 'geo', 'fix', str(points[0][0]), str(points[0][1]))
         time.sleep(2)
     before = capture('01-inicio')
+    control = next(n for n in ET.fromstring(before).iter('node')
+                   if n.get('content-desc') == 'Seguir mi ubicación')
+    assert control.get('selected') == 'true', 'El inicio desactivó el seguimiento GPS'
     assert 'GPS en vivo' in before, 'El GPS Android no llegó a Flutter'
     assert 'Registrar entrega' in before, 'No se abrió el flujo de reparto'
     # Avanzar sobre la primera mitad del recorrido con fixes nativos.

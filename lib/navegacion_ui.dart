@@ -123,14 +123,17 @@ class ControlMapa extends StatelessWidget {
       elevation: 4,
       shadowColor: const Color(0x2412374B),
       shape: const CircleBorder(),
-      child: IconButton(
-        tooltip: texto,
-        onPressed: accion,
-        style: IconButton.styleFrom(
-          minimumSize: const Size(50, 50),
-          foregroundColor: activo ? Colors.white : tinta,
+      child: Semantics(
+        selected: activo,
+        child: IconButton(
+          tooltip: texto,
+          onPressed: accion,
+          style: IconButton.styleFrom(
+            minimumSize: const Size(50, 50),
+            foregroundColor: activo ? Colors.white : tinta,
+          ),
+          icon: Icon(icono),
         ),
-        icon: Icon(icono),
       ),
     ),
   );

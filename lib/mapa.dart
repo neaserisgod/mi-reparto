@@ -403,7 +403,7 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
     if (confirmado && origen != null) {
       await trazar();
     } else {
-      await verRecorrido();
+      await verRecorrido(manual: false);
     }
   }
 
@@ -466,7 +466,7 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
       if (origen != null && seguir) {
         await centrar();
       } else {
-        await verRecorrido();
+        await verRecorrido(manual: false);
       }
     } catch (_) {
       if (mounted) {
@@ -588,11 +588,11 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
     }
   }
 
-  Future<void> verRecorrido() async {
+  Future<void> verRecorrido({bool manual = true}) async {
     if (!listo || mapa == null) return;
     final ps = ruta?.puntos ?? [?origen, ?destino];
     if (ps.isEmpty) return;
-    setState(() => seguir = false);
+    if (manual) setState(() => seguir = false);
     final duracion = movimiento(context, 500);
     try {
       if (ps.length < 2) {
