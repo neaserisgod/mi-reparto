@@ -1,0 +1,53 @@
+"""Reproduce posiciones a través del GPS Android; no inyecta estado Flutter."""
+import json
+from pathlib import Path
+import subprocess
+import time
+import urllib.request
+
+out = Path('evidencia-gps')
+out.mkdir(exist_ok=True)
+
+def adb(*args):
+    return subprocess.check_output(['adb', *args], text=True)
+
+def capture(name):
+    with (out / f'{name}.png').open('wb') as file:
+        subprocess.run(['adb', 'exec-out', 'screencap', '-p'], stdout=file, check=True)
+    adb('shell', 'uiautomator', 'dump', '/sdcard/ventana.xml')
+    xml = adb('shell', 'cat', '/sdcard/ventana.xml')
+    (out / f'{name}.xml').write_text(xml)
+    return xml
+
+adb('install', '-r', 'build/app/outputs/flutter-apk/app-debug.apk')
+for permission in ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION']:
+    adb('shell', 'pm', 'grant', 'com.neaserisgod.mireparto', 'android.permission.' + permission)
+adb('shell', 'settings', 'put', 'secure', 'location_mode', '3')
+adb('emu', 'geo', 'fix', '-58.3816', '-34.6037')
+adb('shell', 'am', 'start', '-n', 'com.neaserisgod.mireparto/.MainActivity')
+url = ('https://routing.openstreetmap.de/routed-car/route/v1/driving/'
+       '-58.3816,-34.6037;-58.3974,-34.5952?overview=full&geometries=geojson&steps=true')
+request = urllib.request.Request(url, headers={'User-Agent': 'MiReparto-GPS-Test/0.3'})
+try:
+    with urllib.request.urlopen(request, timeout=30) as response:
+        route = json.load(response)['routes'][0]
+    points = route['geometry']['coordinates']
+    for _ in range(25):
+        adb('emu', 'geo', 'fix', str(points[0][0]), str(points[0][1]))
+        time.sleep(2)
+    before = capture('01-inicio')
+    assert 'GPS en vivo' in before, 'El GPS Android no llegó a Flutter'
+    assert 'Registrar entrega' in before, 'No se abrió el flujo de reparto'
+    # Avanzar sobre la primera mitad del recorrido con fixes nativos.
+    for point in points[1:max(3, len(points) // 2)]:
+        adb('emu', 'geo', 'fix', str(point[0]), str(point[1]))
+        time.sleep(1.2)
+    middle = capture('02-avance')
+    for _ in range(5):
+        adb('emu', 'geo', 'fix', str(points[-1][0]), str(points[-1][1]))
+        time.sleep(2)
+    final = capture('03-llegada')
+    assert 'Llegaste' in final, 'No se detectó la llegada con dos fixes precisos'
+    assert before != middle, 'El panel no cambió al avanzar'
+finally:
+    (out / 'logcat.txt').write_text(adb('logcat', '-d'))

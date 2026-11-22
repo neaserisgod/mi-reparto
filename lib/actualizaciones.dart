@@ -58,6 +58,82 @@ class VersionDisponible {
 class Actualizador {
   static bool ocupado = false;
   static DateTime? ultimaConsulta;
+
+  // La instalación es una acción explícita del usuario, incluso cuando el
+  // aviso llegó por una búsqueda automática: sus errores siempre son visibles.
+  static Future<void> instalarDescargada(
+    BuildContext context,
+    File archivo,
+  ) async {
+    while (context.mounted) {
+      try {
+        final estado = await canalNativo.invokeMethod<String>('instalar', {
+          'path': archivo.path,
+        });
+        if (!context.mounted || estado == 'instalador') return;
+        if (estado != 'permiso') {
+          throw const FormatException(
+            'Android no confirmó la apertura del instalador. Volvé a intentarlo.',
+          );
+        }
+        final continuar = await showDialog<bool>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: const Text('Permitir la instalación'),
+            content: const Text(
+              'Habilitá «Permitir desde esta fuente» en la pantalla de Android. '
+              'Al volver a Reparto, tocá «Continuar» para instalar el APK ya descargado.',
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx, false),
+                child: const Text('Más tarde'),
+              ),
+              FilledButton(
+                onPressed: () => Navigator.pop(ctx, true),
+                child: const Text('Continuar'),
+              ),
+            ],
+          ),
+        );
+        if (continuar != true) return;
+      } catch (e) {
+        if (!context.mounted) return;
+        final motivo = e is PlatformException
+            ? e.message ?? 'Android no pudo abrir el instalador.'
+            : e is FormatException
+            ? e.message
+            : 'No se pudo abrir el instalador. Volvé a intentarlo.';
+        final firmaIncompatible = motivo.toLowerCase().contains('firma');
+        await showDialog<void>(
+          context: context,
+          builder: (ctx) => AlertDialog(
+            title: Text(
+              firmaIncompatible
+                  ? 'La firma del APK es diferente'
+                  : 'No se pudo abrir el instalador',
+            ),
+            content: Text(
+              firmaIncompatible
+                  ? '$motivo\n\nSi tenés un APK de prueba anterior, exportá y '
+                        'guardá tu respaldo antes de desinstalarlo. Después '
+                        'instalá la versión estable e importá el respaldo. '
+                        'No desinstales sin tener esa copia.'
+                  : motivo,
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Entendido'),
+              ),
+            ],
+          ),
+        );
+        return;
+      }
+    }
+  }
+
   static Future<void> revisar(
     BuildContext context,
     String app, {
@@ -175,18 +251,7 @@ class Actualizador {
         ),
       );
       if (instalar == true) {
-        final estado = await canalNativo.invokeMethod<String>('instalar', {
-          'path': file.path,
-        });
-        if (estado == 'permiso' && context.mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                'Habilitá la instalación y volvé a «Buscar actualizaciones» para continuar.',
-              ),
-            ),
-          );
-        }
+        if (context.mounted) await instalarDescargada(context, file);
       }
     } catch (e) {
       if (manual && context.mounted) {

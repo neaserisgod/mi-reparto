@@ -40,8 +40,16 @@ GitHub Actions verifica y publica el APK de prueba como artifact. Configurar `AN
 
 Desde un cliente, **Ir al cliente** abre un mapa real de OpenStreetMap dentro de Mi Reparto. Se pide ubicación solo al usar el mapa; no hay seguimiento en segundo plano. La dirección se busca priorizando la zona del GPS. Antes de guardar, confirmar o corregir el pin tocando el mapa. Ese destino queda en el respaldo del cliente y no hace falta buscarlo en cada visita.
 
-El mapa muestra posición y recorrido en auto, distancia, tiempo estimado e indicaciones. Desde la misma pantalla se registra la entrega o el pago. «Abrir GPS externo» es opcional. Las búsquedas y rutas necesitan internet y usan servicios públicos de Nominatim y FOSSGIS/OSRM; pueden estar temporalmente indisponibles. No incluyen tránsito en vivo ni navegación por voz. La dirección se envía al geocodificador y las coordenadas al servicio de rutas; no se envían teléfonos, nombres ni cuentas. No se descargan mapas masivamente.
+El mapa vectorial usa MapLibre y OpenFreeMap, con una paleta propia. El GPS nativo de Android solicita posiciones cada segundo, sin esperar diez metros de movimiento; la frecuencia efectiva depende del teléfono y de la señal. La cámara sigue la posición y el rumbo, el recorrido pendiente se reduce al avanzar, las indicaciones cambian según la maniobra y dos posiciones precisas fuera de ruta disparan el recálculo. Al mover el mapa manualmente se suspende el seguimiento; el botón de ubicación lo retoma. La pantalla se mantiene encendida al navegar y el GPS se detiene al enviar la app al fondo. Muestra distancia y llegada estimada sin tránsito en vivo. Desde la misma pantalla se registra la entrega o el pago. «Abrir GPS externo» es opcional. Los mapas, las búsquedas y las rutas necesitan internet y usan servicios públicos de Nominatim y FOSSGIS/OSRM; pueden estar temporalmente indisponibles. No incluyen tránsito en vivo ni navegación por voz. La dirección se envía al geocodificador y las coordenadas al servicio de rutas; no se envían teléfonos, nombres ni cuentas. No se descargan mapas masivamente.
 
 ## Publicación y actualizaciones
 
 Actions → **Publicar actualización Android** → **Run workflow** en `main`. El APK firmado se publica en el backend y las instalaciones lo detectan al abrir o volver a la app. Android pide confirmar la instalación. Sin cuentas ni abonos en la app. Documentación técnica y origen del sistema: [backend de actualizaciones](https://github.com/neaserisgod/mi-lavadero/tree/main/backend).
+
+## Migración de APK de prueba
+
+La compilación antigua 0.2.0+2 tiene otra firma. Android no permite actualizarla con el certificado estable: primero exportar un respaldo y guardarlo fuera de la app; después desinstalar la prueba, instalar el APK estable e importar el respaldo. Las siguientes versiones estables conservan la misma firma. El instalador explica los errores y permite retomar después de habilitar el permiso de instalación.
+
+## Verificar GPS nativo
+
+Actions → **Validar navegación en Android** compila un punto de entrada separado con un cliente ficticio en memoria. El emulador recibe posiciones mediante `adb emu geo fix`; guarda capturas al iniciar, avanzar y llegar, y comprueba el estado GPS y la llegada. Ese escenario no forma parte de la entrada del APK publicado. Las pruebas Dart verifican progreso, imprecisión, desvíos y llegada.

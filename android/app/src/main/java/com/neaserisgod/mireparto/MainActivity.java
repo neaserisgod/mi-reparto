@@ -25,6 +25,10 @@ public class MainActivity extends FlutterActivity {
           PackageInfo info=getPackageManager().getPackageInfo(getPackageName(),0);
           HashMap<String,Object> data=new HashMap<>();
           data.put("version",info.versionName);data.put("build",Build.VERSION.SDK_INT>=28?info.getLongVersionCode():(long)info.versionCode);data.put("package",getPackageName());result.success(data);
+        } else if (call.method.equals("pantallaNavegacion")) {
+          if(Boolean.TRUE.equals(call.argument("activa"))) getWindow().addFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+          else getWindow().clearFlags(android.view.WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+          result.success(null);
         } else if (call.method.equals("instalar")) {
           String path=call.argument("path");if(path==null)throw new IllegalArgumentException("Archivo inválido.");
           File file=new File(path).getCanonicalFile(),dir=new File(getCacheDir(),"updates").getCanonicalFile();
