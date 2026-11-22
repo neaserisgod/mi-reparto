@@ -79,7 +79,7 @@ class IndicacionNavegacion extends StatelessWidget {
                       ),
                     Text(
                       texto,
-                      maxLines: 2,
+                      maxLines: 3,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 21,

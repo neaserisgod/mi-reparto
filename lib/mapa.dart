@@ -380,6 +380,7 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
         if (ds.isNotEmpty) {
           setState(() {
             destino = ds.first.punto;
+            seguir = false; // Revisar el pin antes de iniciar la navegación.
             nombreDestino = ds.first.nombre;
           });
         } else {

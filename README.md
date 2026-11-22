@@ -53,3 +53,5 @@ La compilación antigua 0.2.0+2 tiene otra firma. Android no permite actualizarl
 ## Verificar GPS nativo
 
 Actions → **Validar navegación en Android** compila un punto de entrada separado con un cliente ficticio en memoria. El emulador recibe posiciones mediante `adb emu geo fix`; guarda capturas al iniciar, avanzar y llegar, y comprueba el estado GPS y la llegada. Ese escenario no forma parte de la entrada del APK publicado. Las pruebas Dart verifican progreso, imprecisión, desvíos y llegada.
+
+La validación visual del emulador compila MapLibre con Vulkan por el [fallo conocido #3648](https://github.com/maplibre/maplibre-native/issues/3648): OpenGL emulado omite textos e iconos de OpenFreeMap. El APK para teléfonos mantiene el renderer OpenGL predeterminado del SDK.

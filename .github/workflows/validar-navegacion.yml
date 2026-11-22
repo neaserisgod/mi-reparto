@@ -34,7 +34,9 @@ jobs:
         if: inputs.apk_run_id == ''
       - name: Compilar solo el escenario de prueba
         if: inputs.apk_run_id == ''
-        run: flutter build apk --debug --target-platform android-x64 --target lib/prueba_navegacion.dart
+        # MapLibre #3648: OpenGL del emulador oculta textos y sprites.
+        # Solo la prueba usa Vulkan; el APK distribuido conserva OpenGL.
+        run: env 'ORG_GRADLE_PROJECT_maplibre_gl.renderer=vulkan' flutter build apk --debug --target-platform android-x64 --target lib/prueba_navegacion.dart
       - uses: actions/upload-artifact@v4
         if: inputs.apk_run_id == ''
         with:
