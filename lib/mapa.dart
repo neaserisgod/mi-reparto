@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' as ui;
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:maplibre_gl/maplibre_gl.dart' as ml;
@@ -458,6 +459,45 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
         'destino-centro',
         const ml.CircleLayerProperties(circleColor: '#007A73', circleRadius: 7),
       );
+      // Flecha propia: la ubicación la aporta Geolocator, sin otro proveedor.
+      final dibujo = ui.PictureRecorder();
+      final lienzo = Canvas(dibujo);
+      final flecha = ui.Path()
+        ..moveTo(24, 3)
+        ..lineTo(43, 44)
+        ..lineTo(24, 35)
+        ..lineTo(5, 44)
+        ..close();
+      lienzo.drawPath(
+        flecha,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 6
+          ..strokeJoin = StrokeJoin.round,
+      );
+      lienzo.drawPath(flecha, Paint()..color = acento);
+      final imagen = await dibujo.endRecording().toImage(48, 48);
+      final datos = await imagen.toByteData(format: ui.ImageByteFormat.png);
+      imagen.dispose();
+      await mapa!.addImage(
+        'flecha-gps',
+        datos!.buffer.asUint8List(),
+        false,
+        1.5,
+      );
+      await mapa!.addGeoJsonSource('ubicacion-gps', _punto(null));
+      await mapa!.addSymbolLayer(
+        'ubicacion-gps',
+        'mi-posicion',
+        const ml.SymbolLayerProperties(
+          iconImage: 'flecha-gps',
+          iconAllowOverlap: true,
+          iconIgnorePlacement: true,
+          iconRotationAlignment: 'map',
+          iconRotate: ['get', 'rumbo'],
+        ),
+      );
       if (!mounted) return;
       setState(() => listo = true);
       await pintarDestino();
@@ -543,15 +583,9 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
     final p = ultimaPosicion;
     if (!listo || mapa == null || p == null) return;
     try {
-      await mapa!.updateManualLocation(
-        ml.ManualLocationUpdate(
-          target: ml.LatLng(p.latitude, p.longitude),
-          horizontalAccuracy: p.accuracy,
-          bearing: rumbo,
-          speed: p.speed.isFinite ? math.max(0, p.speed) : 0,
-          timestamp: p.timestamp,
-        ),
-      );
+      final dato = _punto(LatLng(p.latitude, p.longitude));
+      (dato['features'] as List).first['properties'] = {'rumbo': rumbo};
+      await mapa!.setGeoJsonSource('ubicacion-gps', dato);
     } catch (e) {
       assert(() {
         debugPrint('MapLibre: $e');
@@ -841,17 +875,6 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
                     ),
                     onMapCreated: (m) => mapa = m,
                     onStyleLoadedCallback: () => unawaited(cargarEstilo()),
-                    locationSource: const ml.ManualLocationSource(),
-                    myLocationEnabled: origen != null,
-                    myLocationRenderMode: origen != null
-                        ? ml.MyLocationRenderMode.gps
-                        : ml.MyLocationRenderMode.normal,
-                    myLocationStyle: const ml.MyLocationStyle(
-                      fillColor: acento,
-                      bearingColor: acento,
-                      accuracyColor: acento,
-                      pulseEnabled: false,
-                    ),
                     compassEnabled: false,
                     attributionEnabled: true,
                     attributionButtonPosition:

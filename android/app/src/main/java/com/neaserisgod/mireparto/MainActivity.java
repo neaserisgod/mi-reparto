@@ -19,6 +19,10 @@ import java.util.HashMap;
 public class MainActivity extends FlutterActivity {
   @Override public void configureFlutterEngine(@NonNull FlutterEngine engine) {
     super.configureFlutterEngine(engine);
+    if ((getApplicationInfo().flags & android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE) != 0) {
+      try { Class.forName("org.maplibre.android.log.Logger").getMethod("setVerbosity", int.class).invoke(null, android.util.Log.DEBUG); }
+      catch (Exception ignored) { }
+    }
     new MethodChannel(engine.getDartExecutor().getBinaryMessenger(), "app.personal/actualizaciones").setMethodCallHandler((call,result) -> {
       try {
         if (call.method.equals("info")) {

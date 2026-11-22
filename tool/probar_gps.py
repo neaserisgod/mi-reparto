@@ -40,7 +40,8 @@ try:
     before = capture('01-inicio')
     control = next(n for n in ET.fromstring(before).iter('node')
                    if n.get('content-desc') == 'Seguir mi ubicación')
-    assert control.get('selected') == 'true', 'El inicio desactivó el seguimiento GPS'
+    assert any(n.get('selected') == 'true' and n.get('bounds') == control.get('bounds')
+               for n in ET.fromstring(before).iter('node')), 'El inicio desactivó el seguimiento GPS'
     assert 'GPS en vivo' in before, 'El GPS Android no llegó a Flutter'
     assert 'Registrar entrega' in before, 'No se abrió el flujo de reparto'
     # Avanzar sobre la primera mitad del recorrido con fixes nativos.
@@ -63,4 +64,4 @@ try:
     assert 'Llegaste' in final, 'No se detectó la llegada con dos fixes precisos'
     assert before != middle, 'El panel no cambió al avanzar'
 finally:
-    (out / 'logcat.txt').write_text(adb('logcat', '-d'))
+    (out / 'logcat.txt').write_text(adb('logcat', '-d', '--pid=' + adb('shell', 'pidof', 'com.neaserisgod.mireparto').strip()))
