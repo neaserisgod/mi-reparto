@@ -230,15 +230,23 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.paused) {
       enPrimerPlano = false;
+      reanudarGpsPendiente = false;
       ubicacion?.cancel();
       ubicacion = null;
     } else if (state == AppLifecycleState.resumed) {
       enPrimerPlano = true;
-      if (ubicacion == null) unawaited(activarGps());
+      if (ubicacion == null) {
+        if (obteniendoGps) {
+          reanudarGpsPendiente = true;
+        } else {
+          unawaited(activarGps());
+        }
+      }
     }
   }
 
   bool enPrimerPlano = true;
+  bool reanudarGpsPendiente = false;
 
   LocationSettings get ajustesGps => AndroidSettings(
     accuracy: LocationAccuracy.bestForNavigation,
@@ -307,6 +315,11 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
       }
     } finally {
       obteniendoGps = false;
+      final reanudar = reanudarGpsPendiente;
+      reanudarGpsPendiente = false;
+      if (reanudar && mounted && enPrimerPlano && ubicacion == null) {
+        unawaited(activarGps());
+      }
     }
   }
 
