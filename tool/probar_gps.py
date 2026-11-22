@@ -21,6 +21,11 @@ def capture(name):
     (out / f'{name}.xml').write_text(xml)
     return xml
 
+# Reducir carga de SwiftShader y evitar ANR del launcher ajeno a la app.
+adb('shell', 'wm', 'size', '720x1440')
+adb('shell', 'wm', 'density', '280')
+adb('shell', 'pm', 'disable-user', '--user', '0', 'com.android.launcher3')
+adb('shell', 'am', 'force-stop', 'com.android.launcher3')
 adb('install', '-r', 'build/app/outputs/flutter-apk/app-debug.apk')
 for permission in ['ACCESS_FINE_LOCATION', 'ACCESS_COARSE_LOCATION']:
     adb('shell', 'pm', 'grant', 'com.neaserisgod.mireparto', 'android.permission.' + permission)
