@@ -13,6 +13,13 @@ out.mkdir(exist_ok=True)
 def adb(*args):
     return subprocess.check_output(['adb', *args], text=True)
 
+def assert_marker(name):
+    image = Image.open(out / f'{name}.png').convert('RGB')
+    x, y = image.width // 2, image.height // 2
+    area = image.crop((x - 45, y - 45, x + 45, y + 45))
+    pixels = sum(r < 35 and 40 < g < 75 and 55 < b < 95 for r, g, b in area.getdata())
+    assert pixels > 25, 'La posición GPS no se dibujó en el centro del mapa'
+
 def capture(name):
     with (out / f'{name}.png').open('wb') as file:
         subprocess.run(['adb', 'exec-out', 'screencap', '-p'], stdout=file, check=True)
@@ -43,6 +50,7 @@ try:
         adb('emu', 'geo', 'fix', str(points[0][0]), str(points[0][1]))
         time.sleep(2)
     before = capture('01-inicio')
+    assert_marker('01-inicio')
     control = next(n for n in ET.fromstring(before).iter('node')
                    if n.get('content-desc') == 'Seguir mi ubicación')
     assert any(n.get('selected') == 'true' and n.get('bounds') == control.get('bounds')
@@ -54,6 +62,7 @@ try:
         adb('emu', 'geo', 'fix', str(point[0]), str(point[1]))
         time.sleep(1.2)
     middle = capture('02-avance')
+    assert_marker('02-avance')
     # Comparar el mapa mismo, sin tarjetas, barra de estado ni reloj.
     a = Image.open(out / '01-inicio.png').convert('RGB')
     b = Image.open(out / '02-avance.png').convert('RGB')

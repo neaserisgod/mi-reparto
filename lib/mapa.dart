@@ -487,6 +487,16 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
         1.5,
       );
       await mapa!.addGeoJsonSource('ubicacion-gps', _punto(null));
+      await mapa!.addCircleLayer(
+        'ubicacion-gps',
+        'gps-fondo',
+        const ml.CircleLayerProperties(
+          circleColor: '#FFFFFF',
+          circleRadius: 15,
+          circleStrokeColor: '#12374B',
+          circleStrokeWidth: 2,
+        ),
+      );
       await mapa!.addSymbolLayer(
         'ubicacion-gps',
         'mi-posicion',
@@ -864,6 +874,7 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
                 Positioned.fill(
                   child: ml.MapLibreMap(
                     styleString: 'assets/mapa_estilo.json',
+                    symbolPlacementTransitionsEnabled: false,
                     androidView: const ml.AndroidMapView(
                       composition: ml.AndroidComposition.hybridComposition,
                     ),
@@ -881,7 +892,7 @@ class _MapaRepartoState extends State<MapaReparto> with WidgetsBindingObserver {
                         ml.AttributionButtonPosition.bottomLeft,
                     attributionButtonMargins: math.Point<double>(
                       8,
-                      ancho ? 12 : 260 + safe.bottom,
+                      ancho ? 12 : limits.maxHeight * .43 + safe.bottom + 24,
                     ),
                     onMapLongClick: (_, p) => elegirDestino(p),
                     onMapClick: (_, p) {
