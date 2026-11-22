@@ -23,9 +23,6 @@ android {
     buildTypes {
         getByName("release") {
             signingConfig = signingConfigs.getByName("personal")
-            // También filtrar las bibliotecas JNI que agregan los SDK de mapas.
-            // El APK distribuido incluye el motor Flutter para ARM64.
-            ndk { abiFilters.add("arm64-v8a") }
         }
     }
     defaultConfig {

@@ -3,6 +3,7 @@ import base64, hashlib, json, os, sys, urllib.parse, urllib.request, urllib.erro
 from pathlib import Path
 import subprocess,re
 from firma import certificado_correcto
+from arquitectura import verificar_arm64
 from datetime import datetime, timezone
 BASE='https://apps-personales-actualizaciones.gtalovergamer.workers.dev'
 APP=os.environ['APP_ID']
@@ -43,6 +44,7 @@ elif sys.argv[1]=='sign':
     print('APK firmado explícitamente con la clave estable.')
 elif sys.argv[1] in ('publish','verify'):
     file=Path(sys.argv[2]) if sys.argv[1]=='verify' else Path('build/app/outputs/flutter-apk/app-release.apk')
+    verificar_arm64(file)
     tools=sorted((Path(os.environ['ANDROID_HOME'])/'build-tools').glob('*/apksigner'),key=lambda p:tuple(int(x) for x in re.findall(r'\d+',p.parent.name)))
     if not tools:raise SystemExit('No se encontró apksigner. No se publicó el APK.')
     signed=subprocess.run([str(tools[-1]),'verify','--print-certs',str(file)],check=True,capture_output=True,text=True).stdout
