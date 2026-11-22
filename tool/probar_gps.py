@@ -1,5 +1,6 @@
 """Reproduce posiciones a través del GPS Android; no inyecta estado Flutter."""
 import json
+import re
 from pathlib import Path
 import subprocess
 import time
@@ -77,5 +78,28 @@ try:
     final = capture('03-llegada')
     assert 'Llegaste' in final, 'No se detectó la llegada con dos fixes precisos'
     assert before != middle, 'El panel no cambió al avanzar'
+    # Aislar actualización continua, inclinación y composición de Flutter.
+    adb('shell', 'settings', 'put', 'secure', 'location_mode', '0')
+    time.sleep(8)
+    quiet = capture('04-gps-detenido')
+    view = next(n for n in ET.fromstring(quiet).iter('node')
+                if n.get('content-desc') == 'Ver recorrido completo')
+    x1, y1, x2, y2 = map(int, re.findall(r'\d+', view.get('bounds')))
+    adb('shell', 'input', 'tap', str((x1 + x2) // 2), str((y1 + y2) // 2))
+    time.sleep(8)
+    capture('05-sin-inclinacion')
+    (out / 'logcat-normal.txt').write_text(adb('logcat', '-d', '--pid=' + adb('shell', 'pidof', 'com.neaserisgod.mireparto').strip()))
+    for mode in ['normal', 'software']:
+        adb('shell', 'am', 'force-stop', 'com.neaserisgod.mireparto')
+        adb('shell', 'settings', 'put', 'secure', 'location_mode', '3')
+        arguments = ['shell', 'am', 'start', '-n', 'com.neaserisgod.mireparto/.MainActivity']
+        if mode == 'software': arguments += ['--ez', 'enable-software-rendering', 'true']
+        adb(*arguments)
+        for _ in range(10):
+            adb('emu', 'geo', 'fix', str(points[0][0]), str(points[0][1]))
+            time.sleep(2)
+        adb('shell', 'settings', 'put', 'secure', 'location_mode', '0')
+        time.sleep(6)
+        capture('06-reinicio-' + mode)
 finally:
     (out / 'logcat.txt').write_text(adb('logcat', '-d', '--pid=' + adb('shell', 'pidof', 'com.neaserisgod.mireparto').strip()))
